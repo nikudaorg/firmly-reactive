@@ -169,7 +169,8 @@ use(effect)(callback, [prismaCached])
 use(prismaCached.effect)(callback)
 //
 // one con I see is that these 'effect', 'cached' etc take the useful names out of the namespace for definitions.
-// then maybe use($state)
-// or sth like this
+// then maybe: 
+const state = use($state)
+// or sth similar
 
 ```
