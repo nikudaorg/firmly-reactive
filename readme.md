@@ -5,11 +5,12 @@
   - apis
   - UI, obviously
 
-For now you can check out the conceptual samples in sampleServer.ts and sampleClient.ts, maybe someday I will implement it :)
+For now you can check out the conceptual samples in sampleServer.ts, sampleClient.ts and index.ts, maybe someday I will implement it :)
 
 Feel free to contact me if you are interested.
 
 ### Here I will simply put all my thoughts regarding the FRamework:
+
 ```ts
 // lifetime of the resource is determined by the scope in which it is declared
 // lifetime can only shrink down the call stack
@@ -26,7 +27,7 @@ Feel free to contact me if you are interested.
 //
 //
 //
-// You can choose the sorage provider for the resource. 
+// You can choose the sorage provider for the resource.
 // You can probably also choose many (at least like prisma & local)
 //
 //
