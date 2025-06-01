@@ -71,18 +71,18 @@ Feel free to contact me if you are interested.
 // basically
 
 const useCached = <T>(use, externalState: State<T>) => {
-  const localState = use.state<T | 'invalidated'>('local', 'invalidated') // need to work on naming...
+  // const localState = use.state<T | 'invalidated'>('local', 'invalidated') // need to work on naming...
 
   // or maybe:
   const localState = use.volatile((use) => {
-    return use.state<T | 'invalidated'>('invalidated')
+    const state = use.state<T | 'invalidated'>('invalidated')
+    use.effect(() => {state.set('invalidated')}, [externalState])
+    return state
   })
-
-
-
-  use.volatile((use) => {
-    use.effect(() => {localState.set('invalidated')}, [externalState]) 
-  })
+  //
+  // use.volatile((use) => {
+  //   use.effect(() => {localState.set('invalidated')}, [externalState])
+  // })
   // indicates that this effect is not to be 'of persistent lfetime', even though prismaState is
   // but it would be good if it was a default when a local state is being set in the effect, but I'm not sure how.
   // the thing is that in this case the effect kinda expires if localState expires, 
@@ -90,6 +90,8 @@ const useCached = <T>(use, externalState: State<T>) => {
   //
   // oh, I think I know. the thing is that 'set' is not even always available to anything, the lifetime of which is smaller than the lifetime of scope.
   // how to refactor it then though...
+  // i know! the thing is that I don't even need to update localState anywhere except in its volatile definition scope. 
+  // so I can entirely exclude the 'set' from anything that is volatile, but leaves its volatile scope
   //
   // btw what about some sort of useDerived here?
 
@@ -102,10 +104,9 @@ const useCached = <T>(use, externalState: State<T>) => {
       return await externalState.get()
     },
     set: async (value: T) => {
-      prismaState.set(value)
-      localState.set(value)
+      externalState.set(value)
     },
-    useOnChange: (use, listener: () => void) => {
+    useEffect: (use, listener: () => void) => {
       use.effect(listener, [externalState]) 
     }
   }
