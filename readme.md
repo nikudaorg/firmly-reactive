@@ -112,4 +112,64 @@ const useCached = <T>(use, externalState: State<T>) => {
   }
 }
 
+
+// btw maybe define hooks like this:
+//
+//
+//
+const cached = hook(<T>(use, externalState: State<T>) => {
+  // hook code
+})
+//
+// and then call like this
+//
+use(cached, externalState)
+//
+//
+// external use needed for maintaining the information about lifetimes....
+//
+// or even (even though looks more marginal):
+use[cached](externalState)
+// or of course
+use(cached)(externalState)
+use(state)(...)
+
+// looks good btw!
+
+const cached = hook(<T>(use, externalState: State<T>) => {
+  const localState = use(volatile)((use) => {
+    const state = use.state<T | 'invalidated'>('invalidated')
+    use.effect(() => {state.set('invalidated')}, [externalState])
+    return state
+  })
+
+  return {
+    get: async () => {
+      const local = await localState.get();
+      if (local !== 'invalidated') {
+        return local
+      }
+      return await externalState.get()
+    },
+    set: async (value: T) => { // async for consistency
+      await externalState.set(value)
+    },
+    effect: hook((use, listener: () => void) => {
+      use.effect(listener, [externalState]) 
+    })
+  }
+
+})
+
+const prismaCached = use(cached)(prismaState)
+const callback = () => console.log('prisma value changed')
+
+use(effect)(callback, [prismaCached])
+// or
+use(prismaCached.effect)(callback)
+//
+// one con I see is that these 'effect', 'cached' etc take the useful names out of the namespace for definitions.
+// then maybe use($state)
+// or sth like this
+
 ```
