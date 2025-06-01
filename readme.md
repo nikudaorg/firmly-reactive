@@ -43,4 +43,27 @@ Feel free to contact me if you are interested.
 //
 //
 // in what way should we define these rules?
+//
+//
+//
+// basically the sync between storages is something that is already under the reactivve paradigm itself
+// what if multiple runs work simultaneously?
+// then it's important to understand that some storages may be per instance and some inter-instances.
+// which means stuff.
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+// by the way, 'useMany' shouldn't be just some api provided by the storage
+// it would be cool, for example, if we could pair among the elements in different databases like this
+// then useMany should be OUR primitive, not storage provider's one.
+//
+//
+// maybe the same way the questions of multiple storage providers to one state can be resolved.
 ```
