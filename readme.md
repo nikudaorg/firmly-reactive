@@ -70,15 +70,27 @@ Feel free to contact me if you are interested.
 //
 // basically
 
-const useJoinedState = <T>(use) => {
-  localState = use.state<T | 'invalidated'>('local') // need to work on naming...
-  prismaState = use.state('prisma', 'myState')
+const useCached = <T>(use, externalState: State<T>) => {
+  const localState = use.state<T | 'invalidated'>('local', 'invalidated') // need to work on naming...
+
+  // or maybe:
+  const localState = use.volatile((use) => {
+    return use.state<T | 'invalidated'>('invalidated')
+  })
+
+
 
   use.volatile((use) => {
-    use.effect(() => {localState.set('invalidated')}, [prismaState]) 
+    use.effect(() => {localState.set('invalidated')}, [externalState]) 
   })
   // indicates that this effect is not to be 'of persistent lfetime', even though prismaState is
-  // but it would be good if it was a default when localState is being set in the effect.
+  // but it would be good if it was a default when a local state is being set in the effect, but I'm not sure how.
+  // the thing is that in this case the effect kinda expires if localState expires, 
+  // because there is no need to update localState if it's already out of its previous lifetime.
+  //
+  // oh, I think I know. the thing is that 'set' is not even always available to anything, the lifetime of which is smaller than the lifetime of scope.
+  // how to refactor it then though...
+  //
   // btw what about some sort of useDerived here?
 
   return {
@@ -87,15 +99,14 @@ const useJoinedState = <T>(use) => {
       if (local !== 'invalidated') {
         return local
       }
-      return await prismaState.get()
+      return await externalState.get()
     },
     set: async (value: T) => {
       prismaState.set(value)
       localState.set(value)
-      await Promise.all(localListeners.map((l) => l(value))) // need await ?
     },
     useOnChange: (use, listener: () => void) => {
-      use.effect(listener, [prismaState]) 
+      use.effect(listener, [externalState]) 
     }
   }
 }
