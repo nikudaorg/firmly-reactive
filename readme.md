@@ -66,4 +66,38 @@ Feel free to contact me if you are interested.
 //
 //
 // maybe the same way the questions of multiple storage providers to one state can be resolved.
+//
+//
+// basically
+
+const useJoinedState = <T>(use) => {
+  localState = use.state<T | 'invalidated'>('local') // need to work on naming...
+  prismaState = use.state('prisma', 'myState')
+
+  use.volatile((use) => {
+    use.effect(() => {localState.set('invalidated')}, [prismaState]) 
+  })
+  // indicates that this effect is not to be 'of persistent lfetime', even though prismaState is
+  // but it would be good if it was a default when localState is being set in the effect.
+  // btw what about some sort of useDerived here?
+
+  return {
+    get: async () => {
+      const local = await localState.get();
+      if (local !== 'invalidated') {
+        return local
+      }
+      return await prismaState.get()
+    },
+    set: async (value: T) => {
+      prismaState.set(value)
+      localState.set(value)
+      await Promise.all(localListeners.map((l) => l(value))) // need await ?
+    },
+    useOnChange: (use, listener: () => void) => {
+      use.effect(listener, [prismaState]) 
+    }
+  }
+}
+
 ```
