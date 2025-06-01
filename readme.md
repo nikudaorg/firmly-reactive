@@ -104,7 +104,7 @@ const useCached = <T>(use, externalState: State<T>) => {
       return await externalState.get()
     },
     set: async (value: T) => { // async for consistency
-      externalState.set(value)
+      await externalState.set(value)
     },
     useEffect: (use, listener: () => void) => {
       use.effect(listener, [externalState]) 
