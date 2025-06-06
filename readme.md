@@ -173,4 +173,26 @@ use(prismaCached.effect)(callback)
 const state = use($state)
 // or sth similar
 
+
+
+
+
+
+
+// Another question.
+// effects: syncronizations vs impulses
+//
+// impulse:
+useEffect(() => {
+  console.log('data has changed!')
+}, [sth]) 
+
+// synchronizations:
+useEffect(() => {
+  localStorage.setItem('sth', JSON.stringify(sth))
+}, [sth])
+
+// what is the assumed difference between them?
+// should we explicitly divide them into different hooks or something?
+// for each of these options: is it a good utilisation of reactive paradigm, or a bad pattern? if bad pattern, what is the better way?
 ```
