@@ -255,7 +255,7 @@ const $hasTimePassed = hook((use) => (target: Date) => {
       set(true)
     }, Date.now() - target.now())
     return () => clearTimeout(timeoutId)
-  }, []);
+  }, [target]);
 })
 
 // it's a sync engine, not pub/sub engine after all!
