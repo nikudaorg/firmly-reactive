@@ -183,16 +183,99 @@ const state = use($state)
 // effects: syncronizations vs impulses
 //
 // impulse:
-useEffect(() => {
+use($effect)(() => {
   console.log('data has changed!')
 }, [sth]) 
 
-// synchronizations:
-useEffect(() => {
+// synchronizations state -> external
+use($effect)(() => {
   localStorage.setItem('sth', JSON.stringify(sth))
 }, [sth])
+
+// synchronizations external -> state
+use($effect)(() => {
+  const callback = () => {
+    setSth(external.value)
+  }
+  external.on('change', callback);
+  return () => {
+    external.off('change', callback)
+  }
+}, [])
 
 // what is the assumed difference between them?
 // should we explicitly divide them into different hooks or something?
 // for each of these options: is it a good utilisation of reactive paradigm, or a bad pattern? if bad pattern, what is the better way?
+
+// intuition: classical useEffect is better suited for syncronizations. impulses should be handled separately somehow.
+
+// more than that, it looks like that it's not a good practice to react to the fact of change of a state, rather than to the new value. 
+// one possible solution would be to say that the entire thing with pub/sub is not suitable for impulses, causes overcomplicated ties within data, etc. instead follow something as simple as this:
+
+const $stateWithImpulse = hook((use) => <T>(initial: T) => {
+  const state = use($state)(initial);
+  return {
+    get: state.get, 
+    $effect: state.$effect, 
+    set: (newValue: T) => {
+      console.log('impulse');
+      setState(newValue);
+    }
+  }
+})
+
+// ok, assume:
+//
+// 1. 
+const state = use($subsribe)((set) => {
+  set(123);
+  const callback = () => {set(external.value)}
+  external.on('change', callback)
+  return () => external.off('change', callback)
+})
+//   - forbid side effects to the outside enviornment (external)
+//   - allow setters
+
+// 2.
+use($syncOut)(state, () => {
+  external2.updateValue(state.get())
+})
+//   - allow side effects to the outside enviornment (external)
+//   - forbid setters
+
+// example - hook that resolves to true if given date has passed and to false otherwise:
+const $hasTimePassed = hook((use) => (target: Date) => {
+  return use($subscribe)((set) => {
+    if (new Date() > target) {
+      set(true)
+      return
+    }
+    set(false)
+    const timeoutId = setTimeout(() => {
+      set(true)
+    }, Date.now() - target.now())
+    return () => clearTimeout(timeoutId)
+  }, []);
+})
+
+// it's a sync engine, not pub/sub engine after all!
+// and if you want pub/sub so badly, you can simply create a hook for state to which you can actually subscribe not for sync very easily, like this:
+
+const $statePubSub = hook(use => <T>(createState: (use) => State<T>) => {
+  const state = createState(use);
+  const listeners = use($volatile)([])
+
+  return {
+    get: state.get,
+    $effect: state.$effect,
+    set: async (newValue: T) => {
+      state.set(newValue)
+      await Promise.all(listeners.map((l) => l()))
+    },
+    onChange: (listener: () => Promise<void>) => {
+      listeners.set([...listeners.get(), listener])
+    }
+  }
+})
+
 ```
