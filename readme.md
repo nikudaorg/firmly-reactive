@@ -278,4 +278,58 @@ const $statePubSub = hook(use => <T>(createState: (use) => State<T>) => {
   }
 })
 
+
+
+// also I would like to get everythin possible off the 'use' thing, like:
+//
+
+derive(() => {
+  
+})
+
+subscribe(() => {
+
+}, [])
+
+// everything that doesn't need information about lifetimes in types.
+
 ```
+
+## Migrations
+
+```ts
+const file = useFile('file.txt')
+
+// then if we wanna migrate, we must start with updating this line into:
+
+const file = useFile('file.txt', {onDie: (file, deleteFile) => {
+  console.log('migrating from file.txt to file2.txt')
+  createFile('file2.txt', file.content)
+  deleteFile()
+}})
+
+
+// maybe it's even a persistent subscribe under the hood:
+
+const fileId = subscribe((set) => {
+  const fileId = createFile('file.txt');
+  set(fileId)
+  return () => {
+    throw Error('Migration from file.txt not yet implemented')
+  }
+}, [])
+
+const fileContent = local((ctx) => subscribe((set) => {
+  const off = watchFile(fileId.get(), (newContent) => {
+    set(newContent)
+  })
+  return () => {
+    off()
+  }
+}, [fileId]))
+```
+but we still need to track the state of the underlying environment
+and know switching between them, 
+so maybe simple persistent scope is not enough
+
+or, otherwise, everything in consistent scope must be also snapshottable and stuff.
