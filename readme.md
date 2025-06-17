@@ -332,4 +332,12 @@ but we still need to track the state of the underlying environment
 and know switching between them, 
 so maybe simple persistent scope is not enough
 
-or, otherwise, everything in consistent scope must be also snapshottable and stuff.
+or, otherwise, everything in persistent scope must be also snapshottable and stuff.
+
+```ts
+// it seems to me that migrations can be indeed interpreted as a subset of persistent subscriptions
+// yes, migrations are more sensible, than simple subscriptions to something, 
+// but this is not because their different from subscriptions, it's because they are persistent,
+// and everything persistent is more sensible
+
+```
