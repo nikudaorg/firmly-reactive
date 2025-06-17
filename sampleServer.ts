@@ -48,7 +48,9 @@ const $publicNotes = (notes) => {
 };
 
 const $user = (drizzle) => {
-  const notes = $many(() => drizzle.row('note')($note(drizzle, () => notes)));
+  const notes = $many(drizzle.many('note'))((notesRow) =>
+    notesRow($note(drizzle, () => notes))
+  );
   return {
     notes,
     ...drizzle.$state('email')(drizzle.string()),
@@ -66,9 +68,9 @@ const $publicUsers = (users) => {
 export const $app = () => {
   const { drizzle } = $drizzle();
 
-  const { users } = $many(() => drizzle.row('user')($user(drizzle)));
-
-  $many('users', drizzle);
+  const users = $many(drizzle.many('user'))((usersRow) =>
+    usersRow($user(drizzle))
+  );
 
   $hostClient(
     './sampleClient.tsx',
