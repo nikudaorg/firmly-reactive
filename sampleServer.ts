@@ -38,16 +38,13 @@ const $note = (drizzle, getNotes) => {
 };
 
 const $publicNotes = (notes) => {
-  return notes.map(
-    (note) => ({
-      content: note.content.const,
-      references: $publicNotes(note.references),
-      timeCreated: note.timeCreated.const,
-      wordCount: note.wordCount,
-      includesLetterB: note.includesLetterB
-    }),
-    [notes]
-  );
+  return notes.map((note) => ({
+    content: note.content.const,
+    references: $publicNotes(note.references),
+    timeCreated: note.timeCreated.const,
+    wordCount: note.wordCount,
+    includesLetterB: note.includesLetterB
+  }));
 };
 
 const $user = (drizzle) => {
