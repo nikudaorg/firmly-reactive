@@ -3,21 +3,20 @@
 import axios from 'axios';
 
 declare const $drizzle: any;
+declare const dr: any;
 declare const $many: any;
 
 declare const $hostClient: any;
 
 const $note = (drizzle, getNotes) => {
-  const { content } = drizzle.$state('content')(drizzle.string().max(1024));
+  const { content } = drizzle.$state('content')(dr.string().max(1024));
 
   return {
     content,
-    ...drizzle.$state('references')(
-      drizzle.linkElement(drizzle.lazy(getNotes))
-    ),
-    ...drizzle.$state('secretField')(drizzle.string()),
+    ...drizzle.$state('references')(dr.linkElement(dr.lazy(getNotes))),
+    ...drizzle.$state('secretField')(dr.string()),
     ...drizzle.$effect('wordCount')(
-      drizzle.number(),
+      dr.number(),
       async (content) => {
         const res = await axios.get('https://count-words.com/', {
           params: { content }
@@ -27,11 +26,11 @@ const $note = (drizzle, getNotes) => {
       [content]
     ),
     ...drizzle.$derived('includesLetterB')(
-      drizzle.boolean(),
+      dr.boolean(),
       (content) => content.includes('b'),
       [content]
     ),
-    ...drizzle.$state('timeCreated')(drizzle.date(), {
+    ...drizzle.$state('timeCreated')(dr.date(), {
       initial: () => new Date()
     })
   };
@@ -48,8 +47,12 @@ const $publicNotes = (notes) => {
 };
 
 const $user = (drizzle) => {
-  const notes = $many(drizzle.many('note'))((notesRow) =>
-    notesRow($note(drizzle, () => notes))
+  // const notes = $many(drizzle.$many('note'))((drizzle) =>
+  //   drizzle.row($note(drizzle, () => notes))
+  // );
+
+  const notes = drizzle.$many('note')((drizzle) =>
+    drizzle.row($note(drizzle, () => notes))
   );
   return {
     notes,
@@ -68,9 +71,11 @@ const $publicUsers = (users) => {
 export const $app = () => {
   const { drizzle } = $drizzle();
 
-  const users = $many(drizzle.many('user'))((usersRow) =>
-    usersRow($user(drizzle))
-  );
+  // const users = $many(drizzle.$many('user'))((drizzle) =>
+  //   drizzle.row($user(drizzle))
+  // );
+
+  const users = drizzle.$many('user')((drizzle) => drizzle.row($user(drizzle)));
 
   $hostClient(
     './sampleClient.tsx',
